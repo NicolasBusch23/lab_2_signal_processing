@@ -1,0 +1,20 @@
+# --- Procesamiento de Señales y Archivos PhysioNet ---
+wfdb>=4.1.0
+
+# --- Descarga de Datos ---
+requests>=2.30.0
+
+# --- Computación Científica y Álgebra Lineal ---
+numpy>=1.24.0
+scipy>=1.10.0
+
+# --- Manipulación de Datos y Estadística ---
+pandas>=2.0.0
+statsmodels>=0.14.0
+
+# --- Visualización de Señales ---
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# --- Autocorrelación y Procesamiento de Señales ---
+opencv-python>=4.7.0
