@@ -5,13 +5,55 @@ def autocorrelacion(x):
     Parámetros:
     x : Señal de entrada.
         
-    Retorna:
+    Devuelve:
     l : Desplazamientos (lags) de la autocorrelación.
     autocorr : Valores de autocorrelación normalizados.
     """
     l = signal.correlation_lags(len(x), len(x), mode='full')
     autocorr = signal.correlate(x, x, mode='full') / max(signal.correlate(x, x, mode='full'))
     return l, autocorr
+
+def calculo_maximo(l, autocorr):
+    """
+    Calcula el máximo de una señal de autocorrelación y en qué desfase relativo ocurre.
+    Obs: Esta función excluye el pico de autocorrelación en el desfase 0 (que siempre es 1) y busca el siguiente máximo significativo.
+
+    Parámetros:
+    autocorr : Valores de autocorrelación normalizados.
+    l : Desplazamientos relativos de la autocorrelación.
+        
+    Devuelve:
+    tiempo_maximo : Valor de tiempo en el que ocurre el máximo de la autocorrelación (diferente al 1).
+    valor_maximo : Valor máximo de la autocorrelación (diferente al 1).
+
+    """
+    # Encontrar los picos en la autocorrelación
+    peaks = signal.find_peaks(autocorr, prominence = 0.1)
+
+    list_posicion_pico = []
+    list_valores_pico = []
+    centinela = False
+
+    for i in range(len(peaks[0])):
+        valor_pico = autocorr[peaks[0][i]]
+        posicion_pico = l[peaks[0][i]]
+        
+        # Para excluir aquellos picos que ocurren en desfases negativos y en el desfase 1
+        if valor_pico == 1: 
+            centinela = True
+            continue # El pico == 1, no se considerará
+
+        if centinela == True:
+            list_posicion_pico.append(posicion_pico)
+            list_valores_pico.append(valor_pico)
+    
+    valor_maximo = max(list_valores_pico)
+    indice_maximo = list_valores_pico.index(valor_maximo)
+
+    tiempo_maximo = list_posicion_pico[indice_maximo]
+
+    return tiempo_maximo, valor_maximo
+
 
 import pandas as pd
 import numpy as np
@@ -41,6 +83,11 @@ plt.show()
 
 # Recordar que la correlación cruzada funciona mejor para señales bipolares
 l, autocorr = autocorrelacion(ecg - np.mean(ecg))  # Se resta la media para centrar la señal en 0
+
+periodo_estimado, valor_max_autocorr = calculo_maximo(l/500, autocorr)
+    
+print("Desfase relativo del máximo  :", periodo_estimado, "segundos")
+print("Valor máximo de la autocorrelación:", valor_max_autocorr)
 
 # Gráfico de la autocorrelación de la señal ECG
 plt.figure(figsize=(12, 6))
