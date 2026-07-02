@@ -60,7 +60,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 
-df_s1_run = pd.read_csv("datos_csv\\s10_run.csv")
+df_s1_run = pd.read_csv("datos_csv\\s1_run.csv")
 df_s1_run["time"] = pd.to_datetime(df_s1_run["time"], format="%Y-%m-%d   %H:%M:%S.%f")
 
 # Para pasar de datetime a tiempo transcurrido desde el inicio del experimento (df_s1_run['time'].iloc[0])
@@ -68,7 +68,7 @@ tiempo_transcurrido = df_s1_run['time'] - df_s1_run['time'].iloc[0]
 df_s1_run['segundos_transcurridos'] = tiempo_transcurrido.dt.total_seconds() # Convierte el tiempo transcurrido a segundos
 
 # Para filtrar los datos de acuerdo a los segundos de interés
-df_filtrada = df_s1_run.query("segundos_transcurridos >= 300 and segundos_transcurridos <= 303")
+df_filtrada = df_s1_run.query("segundos_transcurridos >= 300")
 t = df_filtrada['segundos_transcurridos']
 ecg = df_filtrada['ecg']
 
@@ -86,8 +86,13 @@ l, autocorr = autocorrelacion(ecg - np.mean(ecg))  # Se resta la media para cent
 
 periodo_estimado, valor_max_autocorr = calculo_maximo(l/500, autocorr)
     
-print("Desfase relativo del máximo  :", periodo_estimado, "segundos")
+print("Desfase relativo del máximo:", periodo_estimado, "segundos")
 print("Valor máximo de la autocorrelación:", valor_max_autocorr)
+print(f"""
+La señal de ECG tiende a parecerse en un {valor_max_autocorr*100:.2f}% cuando el retardo es de {periodo_estimado}s. 
+Este valor de retardo puede interpretarse como el periodo de la señal, lo cual significa 
+que el estimado de pulso para el paciente en las condiciones descritas es de {60/periodo_estimado:.2f} ppm
+(pulsaciones por minuto).""")
 
 # Gráfico de la autocorrelación de la señal ECG
 plt.figure(figsize=(12, 6))
