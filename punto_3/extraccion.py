@@ -6,87 +6,97 @@ import auxiliar as aux
 
 F_s =  500 # Frecuencia de muestreo en Hz
 
-num_sujeto = input("Ingrese el número de sujeto que desea analizar: ")
-actividad = input("Ingrese la actividad que desea analizar (sit, walk, run): ")
+# Sujetos de entrenamiento (68% de la base de datos dada)
+sujetos_entrenamiento = [1,3,4,5,6,8,9,10,11,12,15,16,17,19,21]
 
-df = pd.read_csv(f"datos_csv\\s{num_sujeto}_{actividad}.csv")
-df["time"] = pd.to_datetime(df["time"], format="%Y-%m-%d   %H:%M:%S.%f")
+# Clases con las que se pretende asociar las características extraidas de las señales
+clases = ["sit", "walk", "run"] # Clases posibles de actividad física
 
-# Para pasar de datetime a tiempo transcurrido desde el inicio del experimento (df_s['time'].iloc[0])
-tiempo_transcurrido = df['time'] - df['time'].iloc[0]
-df['segundos_transcurridos'] = tiempo_transcurrido.dt.total_seconds() # Convierte el tiempo transcurrido a segundos
-df = df.query(f"segundos_transcurridos >= 20 and segundos_transcurridos <= 30")
+for num_sujeto in sujetos_entrenamiento:
 
-datos = df[["segundos_transcurridos", "ecg", "a_x", "a_y", "a_z"]].copy()
-datos["a_mag"] = np.sqrt((datos["a_x"]**2 + datos["a_y"]**2 + datos["a_z"]**2))
+    for actividad in clases:
 
-ventana = 5  # Duración de la ventana en segundos 
-paso = ventana / 2  # Paso de la ventana (50% de superposición)
+        df = pd.read_csv(f"datos_csv\\s{num_sujeto}_{actividad}.csv")
+        df["time"] = pd.to_datetime(df["time"], format="%Y-%m-%d   %H:%M:%S.%f")
 
-inicio = datos['segundos_transcurridos'].iloc[0]
-fin = inicio + ventana
+        # Para pasar de datetime a tiempo transcurrido desde el inicio del experimento (df_s['time'].iloc[0])
+        tiempo_transcurrido = df['time'] - df['time'].iloc[0]
+        df['segundos_transcurridos'] = tiempo_transcurrido.dt.total_seconds() # Convierte el tiempo transcurrido a segundos
 
-caracteristicas = []
-num_ventana = 0
+        # -- Prueba: En caso de que se desee probar el código para cierto intervalo pequeño:
+        # df = df.query(f"segundos_transcurridos >= 20 and segundos_transcurridos <= 30")
 
-while True:
-    num_ventana += 1 # Cuenta el número de ventana generada
-    segmento = datos[(datos['segundos_transcurridos'] >= inicio) & (datos['segundos_transcurridos'] <= fin)]
+        datos = df[["segundos_transcurridos", "ecg", "a_x", "a_y", "a_z"]].copy()
+        datos["a_mag"] = np.sqrt((datos["a_x"]**2 + datos["a_y"]**2 + datos["a_z"]**2))
 
-    t = segmento["segundos_transcurridos"]
-    a_mag = segmento["a_mag"]
-    ecg = segmento["ecg"]
+        ventana = 5  # Duración de la ventana en segundos 
+        paso = ventana / 2  # Paso de la ventana (50% de superposición)
 
-    window = signal.windows.hamming(len(segmento))
-    a_mag_windowed = a_mag * window
-    ecg_windowed = ecg * window
+        inicio = datos['segundos_transcurridos'].iloc[0]
+        fin = inicio + ventana
 
-    # -- Extracción de características de la señal de aceleración en magnitud
-    media, sd, rms, maximo, minimo, rango, energia, f_dom = aux.caracteristicas_a(a_mag_windowed)
+        caracteristicas = []
+        num_ventana = 0
 
-    # -- Extracción de PPM de la señal de ECG
-    ppm = aux.ppm(ecg_windowed, F_s)
+        while True:
+            num_ventana += 1 # Cuenta el número de ventana generada
+            segmento = datos[(datos['segundos_transcurridos'] >= inicio) & (datos['segundos_transcurridos'] <= fin)]
 
-    # print("----------------------")
-    # print("Inicio de la ventana:", inicio)
-    # print("Fin de la ventana:", fin)
-    # print(f"Ventana: {inicio:.2f}s - {fin:.2f}s")
-    # print(f"Media: {media:.4f}")
-    # print(f"Desviación estándar: {sd:.4f}")
-    # print(f"RMS: {rms:.4f}")
-    # print(f"Máximo: {maximo:.4f}")
-    # print(f"Mínimo: {minimo:.4f}")
-    # print(f"Rango: {rango:.4f}")
-    # print(f"Energía: {energia:.4f}")
-    # print(f"La mayor concetración de energía se encuentra alrededor de la frecuencia: {f_dom:.4f} Hz")
+            t = segmento["segundos_transcurridos"]
+            a_mag = segmento["a_mag"]
+            ecg = segmento["ecg"]
 
-    # -- Se guarda la información calculada de la ventana
-    caracteristicas.append({
-    "num_ventana": num_ventana,
-    "actividad": actividad,
-    "media_a": media,
-    "sd_a": sd,
-    "rms_a": rms,
-    "maximo_a": maximo,
-    "minimo_a": minimo,
-    "rango_a": rango,
-    "energia_a": energia,
-    "f_dom_a": f_dom,
-    "pppm_ecg": ppm,
-    })
+            window = signal.windows.hamming(len(segmento))
+            a_mag_windowed = a_mag * window
+            ecg_windowed = ecg * window
 
-    # Para desplazar la ventana 
-    inicio += paso
-    fin += paso
+            # -- Extracción de características de la señal de aceleración en magnitud
+            media, sd, rms, maximo, minimo, rango, energia, f_dom = aux.caracteristicas_a(a_mag_windowed)
 
-    if fin > datos['segundos_transcurridos'].max():  # Si la ventana se sale del rango de tiempo de la señal, se detiene el bucle
-        break
+            # -- Extracción de PPM de la señal de ECG
+            ppm = aux.ppm(ecg_windowed, F_s)
 
-# Para incluir las características obtenidas de cada ventana en un solo DataFrame
-df_caracteristicas = pd.DataFrame(caracteristicas)
+            # -- Prueba: En caso de que se desee ver las características extraídas de cada ventana.
+            # print("----------------------")
+            # print("Inicio de la ventana:", inicio)
+            # print("Fin de la ventana:", fin)
+            # print(f"Ventana: {inicio:.2f}s - {fin:.2f}s")
+            # print(f"Media: {media:.4f}")
+            # print(f"Desviación estándar: {sd:.4f}")
+            # print(f"RMS: {rms:.4f}")
+            # print(f"Máximo: {maximo:.4f}")
+            # print(f"Mínimo: {minimo:.4f}")
+            # print(f"Rango: {rango:.4f}")
+            # print(f"Energía: {energia:.4f}")
+            # print(f"La mayor concetración de energía se encuentra alrededor de la frecuencia: {f_dom:.4f} Hz")
 
-# Exporta la informacion en un .csv
-df_caracteristicas.to_csv(
-    f"punto_3/entrenamiento/caracteristicas_s{num_sujeto}_{actividad}.csv",
-    index = False
-)
+            # -- Se guarda la información calculada de la ventana
+            caracteristicas.append({
+            "num_ventana": num_ventana,
+            "actividad": actividad,
+            "media_a": media,
+            "sd_a": sd,
+            "rms_a": rms,
+            "maximo_a": maximo,
+            "minimo_a": minimo,
+            "rango_a": rango,
+            "energia_a": energia,
+            "f_dom_a": f_dom,
+            "pppm_ecg": ppm,
+            })
+
+            # Para desplazar la ventana 
+            inicio += paso
+            fin += paso
+
+            if fin > datos['segundos_transcurridos'].max():  # Si la ventana se sale del rango de tiempo de la señal, se detiene el bucle
+                break
+
+        # Para incluir las características obtenidas de cada ventana en un solo DataFrame
+        df_caracteristicas = pd.DataFrame(caracteristicas)
+
+        # Exporta la informacion en un .csv
+        df_caracteristicas.to_csv(
+            f"punto_3/entrenamiento/caracteristicas_s{num_sujeto}_{actividad}.csv",
+            index = False
+        )
