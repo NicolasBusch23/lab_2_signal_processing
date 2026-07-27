@@ -35,15 +35,15 @@ def caracteristicas_a(datos):
     f_dom = frec[indice_max]
 
     # -- Prueba: En caso de que se desee observar el máximo que escoge el código de acuerdo al espectro de energía:
-    plt.figure()
-    plt.plot(frec, espectro_energia)
-    # Marcar el pico dominante en la gráfica con un punto rojo
-    plt.plot(f_dom, espectro_energia[indice_max], 'ro', label=f'F. Dom: {f_dom:.2f} Hz')
-    plt.title('Espectro de Energía de la Señal de Aceleración')
-    plt.xlabel('Frecuencia (Hz)')
-    plt.ylabel('Espectro de Energía')
-    plt.legend()
-    plt.show()
+    # plt.figure()
+    # plt.plot(frec, espectro_energia)
+    # # Marcar el pico dominante en la gráfica con un punto rojo
+    # plt.plot(f_dom, espectro_energia[indice_max], 'ro', label=f'F. Dom: {f_dom:.2f} Hz')
+    # plt.title('Espectro de Energía de la Señal de Aceleración')
+    # plt.xlabel('Frecuencia (Hz)')
+    # plt.ylabel('Espectro de Energía')
+    # plt.legend()
+    # plt.show()
 
     # Recuerda retornar la f_dom para poder usarla en tu clasificador
     return media, sd, rms, maximo, minimo, rango, energia, f_dom

@@ -121,8 +121,12 @@ for num_sujeto in sujetos_entrenamiento:
         # Para incluir las características obtenidas de cada ventana en un solo DataFrame
         df_caracteristicas = pd.DataFrame(caracteristicas)
 
-        # Exporta la informacion en un .csv
-        df_caracteristicas.to_csv(
-            f"punto_3/entrenamiento/caracteristicas_s{num_sujeto}_{actividad}.csv",
-            index = False
-        )
+        # Exporta la informacion en un .csv de acuerdo a la decisión de filtrado de las señales de acelerometría
+        if desea_filtrar_señales_acelereometria:
+            df_caracteristicas.to_csv(
+                f"punto_3/entrenamiento_con_filtro/caracteristicas_s{num_sujeto}_{actividad}.csv",
+                index = False)
+        else:
+            df_caracteristicas.to_csv(
+                f"punto_3/entrenamiento_sin_filtro/caracteristicas_s{num_sujeto}_{actividad}.csv",
+                index = False)
