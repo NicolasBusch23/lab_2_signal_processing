@@ -28,39 +28,28 @@ def caracteristicas_a(datos):
     fft = np.abs(np.fft.rfft(datos))
     espectro_energia = fft**2 
 
-    # 1. Ignorar las frecuencias menores a 0.5 Hz (Elimina el pico de gravedad en 0 Hz)
-    indices_validos = np.where(frec > 0.5)[0] 
-    
-    # Si la ventana es muy corta y no hay frecuencias > 0.5, evitamos un error
-    if len(indices_validos) > 0:
-        frec_validas = frec[indices_validos]
-        espectro_energia_valido = espectro_energia[indices_validos]
-
-        # 2. Buscar directamente el índice del valor máximo
-        indice_max = np.argmax(espectro_energia_valido)
+    # Para buscar el índice con valor máximo en el espectro de energía
+    indice_max = np.argmax(espectro_energia)
         
-        # 3. Extraer la frecuencia dominante
-        f_dom = frec_validas[indice_max]
-    else:
-        f_dom = 0.0 # Valor por defecto si algo falla
+    # Extraer la frecuencia dominante
+    f_dom = frec[indice_max]
 
     # -- Prueba: En caso de que se desee observar el máximo que escoge el código de acuerdo al espectro de energía:
-    # plt.figure()
-    # plt.plot(frec, espectro_energia)
-    # # Marcar el pico dominante en la gráfica con un punto rojo
-    # plt.plot(f_dom, espectro_energia_valido[indice_max], 'ro', label=f'F. Dom: {f_dom:.2f} Hz')
-    # plt.title('Espectro de Energía de la Señal de Aceleración')
-    # plt.xlabel('Frecuencia (Hz)')
-    # plt.ylabel('Espectro de Energía')
-    # plt.xlim(0, 10) # Te sugiero hacer zoom a los primeros 10 Hz, el movimiento humano no pasa de ahí
-    # plt.legend()
-    # plt.show()
+    plt.figure()
+    plt.plot(frec, espectro_energia)
+    # Marcar el pico dominante en la gráfica con un punto rojo
+    plt.plot(f_dom, espectro_energia[indice_max], 'ro', label=f'F. Dom: {f_dom:.2f} Hz')
+    plt.title('Espectro de Energía de la Señal de Aceleración')
+    plt.xlabel('Frecuencia (Hz)')
+    plt.ylabel('Espectro de Energía')
+    plt.legend()
+    plt.show()
 
     # Recuerda retornar la f_dom para poder usarla en tu clasificador
     return media, sd, rms, maximo, minimo, rango, energia, f_dom
 
 def ppm(datos, F_s):
-    l, autocorr = p1.autocorrelacion(datos - np.mean(datos))  # Se resta la media para centrar la señal en 0
+    l, autocorr = p1.autocorrelacion(datos)
     periodo_estimado, valor_max_autocorr = p1.calculo_maximo(l/F_s, autocorr)
 
     # Gráfico de la autocorrelación de la señal ECG
