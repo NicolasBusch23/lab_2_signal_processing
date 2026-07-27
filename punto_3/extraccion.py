@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as signal
 import auxiliar as aux
+import filtros
 
 F_s =  500 # Frecuencia de muestreo en Hz
 
@@ -26,10 +27,33 @@ for num_sujeto in sujetos_entrenamiento:
         # -- Prueba: En caso de que se desee probar el código para cierto intervalo pequeño:
         # df = df.query(f"segundos_transcurridos >= 20 and segundos_transcurridos <= 30")
 
-        datos = df[["segundos_transcurridos", "ecg", "a_x", "a_y", "a_z"]].copy()
+        # -- En caso de se desee filtrar señales de acelerometría, TRUE. En caso contrario, FALSE
+        desea_filtrar_señales_acelereometria = False
+
+        if desea_filtrar_señales_acelereometria:
+            datos = df[["segundos_transcurridos", "ecg"]].copy()
+
+            datos["a_x"] = filtros.aplicar_filtro_pasabanda(df["a_x"], F_s, 
+                                                           freq_min = 0.5, freq_max = 10, orden = 4)
+            datos["a_y"] = filtros.aplicar_filtro_pasabanda(df["a_y"], F_s, 
+                                                           freq_min = 0.5, freq_max = 10, orden = 4)
+            datos["a_z"] = filtros.aplicar_filtro_pasabanda(df["a_z"], F_s, 
+                                                           freq_min = 0.5, freq_max = 10, orden = 4)
+
+        else:
+            datos = df[["segundos_transcurridos", "ecg","a_x", "a_y", "a_z"]].copy()
+
+
         datos["a_mag"] = np.sqrt((datos["a_x"]**2 + datos["a_y"]**2 + datos["a_z"]**2))
 
-        ventana = 5  # Duración de la ventana en segundos 
+        # -- Prueba: print(datos.head(10))
+
+        # -- Prueba:
+        # plt.figure()
+        # plt.plot(datos["segundos_transcurridos"],datos["a_mag"])
+        # plt.show()
+
+        ventana = 5 # Duración de la ventana en segundos 
         paso = ventana / 2  # Paso de la ventana (50% de superposición)
 
         inicio = datos['segundos_transcurridos'].iloc[0]
@@ -43,8 +67,10 @@ for num_sujeto in sujetos_entrenamiento:
             segmento = datos[(datos['segundos_transcurridos'] >= inicio) & (datos['segundos_transcurridos'] <= fin)]
 
             t = segmento["segundos_transcurridos"]
-            a_mag = segmento["a_mag"]
-            ecg = segmento["ecg"]
+
+            # Para volver las señales bipolares, se resta su media (DUDA)
+            a_mag = segmento["a_mag"] - np.mean(segmento["a_mag"].values)
+            ecg = segmento["ecg"] - np.mean(segmento["ecg"].values)
 
             window = signal.windows.hamming(len(segmento))
             a_mag_windowed = a_mag * window
