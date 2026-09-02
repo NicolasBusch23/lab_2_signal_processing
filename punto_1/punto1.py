@@ -38,7 +38,7 @@ def calculo_maximo(l, autocorr):
         valor_pico = autocorr[peaks[0][i]]
         posicion_pico = l[peaks[0][i]]
         
-        # Para excluir aquellos picos que ocurren en desfases negativos y en el desfase 1
+        # Para excluir aquellos picos que ocurren en desfases negativos y en el desfase l = 0 (que siempre es 1)
         if valor_pico == 1: 
             centinela = True
             continue # El pico == 1, no se considerará
@@ -62,21 +62,21 @@ from scipy import signal
 
 num_sujeto = input("Ingrese el número de sujeto que desea analizar: ")
 
-df_s_run = pd.read_csv(f"datos_csv\\s{num_sujeto}_run.csv")
-df_s_run["time"] = pd.to_datetime(df_s_run["time"], format="%Y-%m-%d   %H:%M:%S.%f")
+df_s_sit = pd.read_csv(f"datos_csv\\s{num_sujeto}_sit.csv")
+df_s_sit["time"] = pd.to_datetime(df_s_sit["time"], format="%Y-%m-%d   %H:%M:%S.%f")
 
 # Para pasar de datetime a tiempo transcurrido desde el inicio del experimento (df_s_run['time'].iloc[0])
-tiempo_transcurrido = df_s_run['time'] - df_s_run['time'].iloc[0]
-df_s_run['segundos_transcurridos'] = tiempo_transcurrido.dt.total_seconds() # Convierte el tiempo transcurrido a segundos
+tiempo_transcurrido = df_s_sit['time'] - df_s_sit['time'].iloc[0]
+df_s_sit['segundos_transcurridos'] = tiempo_transcurrido.dt.total_seconds() # Convierte el tiempo transcurrido a segundos
 
 # Para filtrar los datos de acuerdo a los segundos de interés
-df_filtrada = df_s_run.query("segundos_transcurridos >= 300")
+df_filtrada = df_s_sit.query("segundos_transcurridos >= 240 and segundos_transcurridos <= 245")
 t = df_filtrada['segundos_transcurridos']
 ecg = df_filtrada['ecg']
 
 # Gráfico de la señal ECG vs tiempo
 plt.figure(figsize=(12, 6))
-plt.plot(t, ecg)
+plt.plot(t, ecg - np.mean(ecg))
 plt.xlabel('Tiempo (s)')
 plt.ylabel('ECG')
 plt.title('Señal ECG vs Tiempo')

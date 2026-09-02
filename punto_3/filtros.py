@@ -2,10 +2,10 @@ import scipy.signal as signal
 
 def aplicar_filtro_pasabanda(datos, F_s, freq_min, freq_max, orden):
     """
-    Aplica un filtro Butterworth pasabanda a una señal de acelerometría.
+    Aplica un filtro Butterworth pasabanda a una señal.
     
     Parámetros:
-    - datos: señal de acelerometría (a_x, a_y o a_z).
+    - datos: señal.
     - F_s: frecuencia de muestreo de tu sensor (en Hz).
     - freq_min: límite inferior.
     - freq_max: límite superior.
